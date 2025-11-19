@@ -1,0 +1,1098 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content=
+"width=device-width,initial-scale=1"
+ />
+<title>Spinner V1.1</title>
+<style>
+    /* Basic layout */
+    body { font-family: Arial, sans-serif; background: #222
+; 
+color: #fafafa; text-align: center; margin: 0; padding: 18px; }
+    h1 { margin: 6px 0 12px 0; }
+    #spinner-container { position: relative; width: 1150px; max-width: 98%; margin: 12px auto; overflow: hidden; background: #333; border-radius: 12px; border: 3px solid #888; height: 120px;}
+    #spinner { display: flex; height: 120px; justify-content: center;}
+    .rarity { flex: 0 0 120px; width: 120px; height: 120px; display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 1em; font-weight: bold; border-right: 2px solid #222; box-sizing: border-box;}
+    .common      { background: #bdbdbd; color: #222; }
+    .rare        { background: #2196f3; }
+    .epic        { background: #9c27b0; }
+    .legendary   { background: #ff9800; }
+    .mythical    { background: #d50000; color: #fff; }
+    .unreal      { background: #00b8d4; color: #fff; }
+    .rock        { background: #4e342e; color: #fff; }
+    .celestial   { background: #d1c4e9; color: #222; }
+    .divine      { background: #ffd700; color: #222; }
+    .cosmic      { background: #1de9b6; color: #222; }
+    .eternal     { background: #263238; color: #fff; }
+    .omniversal  { background: #9fa8da; color: #222; }
+    .astral      { background: #b388ff; color: #222; }
+    .phantasm    { background: #ff80ab; color: #222; }
+    .void        { background: #212121; color: #fff; }
+    .prismatic   { background: #e1bee7; color: #222; }
+    .infinite    { background: #1976d2; color: #fff; }
+    .transcendent{ background: #fbc02d; color: #222; }
+    .origin      { background: #4caf50; color: #fff; }
+    .apex        { background: #f44336; color: #fff; }
+    .apotheosis  { background: #ffeb3b; color: #222; }
+    .meta        { background: #616161; color: #fff; }
+    .absolute    { background: #00bcd4; color: #fff; }
+    .rarity img { width: 70px; height: 70px; object-fit: contain; margin-bottom: 4px; border-radius: 10px; background: #222; border: 2px solid #555;}
+    #pointer { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-bottom: 24px solid #fff; z-index: 2;}
+    #inventory { margin: 18px auto; width: 1150px; max-width: 98%; display: flex; justify-content: space-between; flex-wrap: wrap;}
+    .inv-item { font-size: 1.05em; padding: 8px 12px; border-radius: 8px; margin: 0 5px; min-width: 70px; display: inline-block; margin-bottom: 5px;}
+    #controls { margin: 12px auto; }
+    #roll-btn, #auto-roll-toggle-btn, .small-btn { font-size: 1.05em; padding: 10px 14px; border: none; border-radius: 8px; background-color: #2196f3; color: #fff; cursor: pointer; margin: 6px; }
+    #roll-btn:disabled, #auto-roll-toggle-btn:disabled { background: #888 !important; cursor: not-allowed; }
+    #crafting-container, #stats-container { margin: 18px auto; width: 900px; max-width: 98%; text-align: left;}
+    #crafting-toggle, .subcrafting-toggle, #stats-toggle { font-size: 1.05em; padding: 12px 18px; border: none; border-radius: 8px; background-color: #2196f3; color: #fff; cursor: pointer; margin-bottom: 10px; margin-top: 10px; display: block; width: 100%; text-align: left;}
+    .subcrafting-toggle { font-size: 0.95em; padding: 8px 14px; margin: 6px 0; background-color: #1565c0;}
+    #crafting, #roll-crafting, #luck-crafting, #cosmetic-crafting, #stats { background: #444; border-radius: 12px; padding: 18px 12px 14px 12px; margin-top: 0; margin-bottom: 6px; display: none;}
+    #roll-crafting, #luck-crafting { background: #333; margin-top: 8px; padding-left: 18px;}
+    .craft-btn { font-size: 1.05em; padding: 10px 16px; border: none; border-radius: 8px; background-color: #2196f3; color: #fff; cursor: pointer; margin: 10px 10px 10px 0; transition: background 0.25s;}
+    .craft-btn[disabled] { background: #666; cursor:not-allowed; }
+    .craft-btn.crafted { background-color: #2ecc40 !important; color: #fff; }
+    .crafted-upgrade { color: #ffd600; font-weight: bold; margin-left: 8px; }
+    #craft-result, #luck-timer { font-weight: bold; color: #ffd600; min-height: 24px; margin-top: 6px; }
+    #luck-timer { color: #00ffea; }
+    #stats-content { font-size: 1.05em; margin: 10px 0; color: #ffd600; }
+    /* Cutscene overlay */
+    #cutscene-overlay { position: fixed; inset: 0; display: none; align-items: center; justify-content: center; background: rgba(0,0,0,0.85); z-index: 9999; }
+    #cutscene-card { width: 720px; max-width: 94%; background: linear-gradient(135deg,#111,#2a2a2a); border-radius: 14px; padding: 26px; text-align: center; box-shadow: 0 10px 40px rgba(0,0,0,0.6); transform: scale(0.96); animation: cutsceneIn 360ms ease forwards; color: #fff;}
+    @keyframes cutsceneIn { to { transform: scale(1); } }
+    #cutscene-item-img { width: 180px; height: 180px; object-fit: contain; border-radius: 12px; background:#111; border: 3px solid rgba(255,255,255,0.08); margin-bottom:12px; }
+    #cutscene-title { font-size: 28px; font-weight: 800; color: #ffd600; margin-bottom:6px; }
+    #cutscene-desc  { font-size: 16px; color: #eaeaea; margin-bottom:14px; }
+    #cutscene-skip { font-size: 14px; padding: 8px 14px; border-radius: 8px; background:#2196f3; color:white; border:none; cursor:pointer; }
+    /* Save UI */
+    #save-controls { margin-top: 10px; display:flex; gap:10px; justify-content:center; align-items:center; flex-wrap:wrap;}
+    #save-controls textarea { width: 600px; max-width: 90%; height: 76px; border-radius:8px; padding:8px; background:#fff; color:#000; }
+    /* responsive */
+    @media (max-width:1000px) { .rarity{flex-basis:90px;width:90px;height:90px;} .rarity img{width:50px;height:50px} #spinner-container{height:100px} }
+</style>
+</head>
+<body>
+    <h1>Spinner V1.1</h1>
+
+    <div id="spinner-container">
+        <div id="pointer"></div>
+        <div id="spinner"></div>
+    </div>
+
+    <div id="controls">
+        <button id="roll-btn">Spin</button>
+        <button id="auto-roll-toggle-btn" style="display:none;">Start Auto Roll</button>
+    </div>
+
+    <div id="inventory"></div>
+
+    <div id="crafting-container">
+        <button id="crafting-toggle">▼ Crafting</button>
+        <div id="crafting">
+            <h2>Craft Upgrades</h2>
+            <button id="roll-crafting-toggle" class="subcrafting-toggle">▼ Roll Upgrades</button>
+            <div id="roll-crafting"></div>
+            <button id="luck-crafting-toggle" class="subcrafting-toggle">▼ Luck Upgrades</button>
+            <div id="luck-crafting"></div>
+            <button id="cosmetic-crafting-toggle" class="subcrafting-toggle">▼ Cosmetic Crafting</button>
+            <div id="cosmetic-crafting"></div>
+        </div>
+    </div>
+
+    <div id="stats-container">
+        <button id="stats-toggle">▼ Stats</button>
+        <div id="stats">
+            <h2>Your Stats</h2>
+            <div id="stats-content"></div>
+        </div>
+    </div>
+
+    <div id="craft-result"></div>
+    <div id="luck-timer"></div>
+
+    <!-- Cutscene overlay -->
+    <div id="cutscene-overlay" aria-hidden="true">
+      <div id="cutscene-card" role="dialog" aria-modal="true">
+        <img id="cutscene-item-img" src="" alt="">
+        <div id="cutscene-title"></div>
+        <div id="cutscene-desc"></div>
+        <button id="cutscene-skip">Skip</button>
+      </div>
+    </div>
+
+    <!-- Save controls (clipboard + file) -->
+    <div id="save-controls" style="margin-top:18px;">
+      <button id="copy-save-btn" class="small-btn">Copy Save to Clipboard</button>
+      <input type="file" id="importFile" accept=".json,.txt,application/json" style="display:none;">
+      <button id="paste-load-btn" class="small-btn">Load</button>
+      <input id="paste-input" placeholder="Paste your save data here" style="width:420px;max-width:44%;padding:8px;border-radius:6px;background:#fff;color:#000;">
+    </div>
+
+<script>
+/* ---------------------------
+   Configuration & Data
+   --------------------------- */
+const rarities = [
+    { name: 'Common',      class: 'common',      image: 'https://upload.wikimedia.org/wikipedia/commons/6/6d/Circle_icon_black.svg' },
+    { name: 'Rare',        class: 'rare',        image: 'https://upload.wikimedia.org/wikipedia/commons/3/3b/Blue_square.svg' },
+    { name: 'Epic',        class: 'epic',        image: 'https://upload.wikimedia.org/wikipedia/commons/1/17/Purple_square.svg' },
+    { name: 'Legendary',   class: 'legendary',   image: 'https://upload.wikimedia.org/wikipedia/commons/1/13/Orange_square.svg' },
+    { name: 'Mythical',    class: 'mythical',    image: 'https://upload.wikimedia.org/wikipedia/commons/f/f6/Red_square.svg' },
+    { name: 'Unreal',      class: 'unreal',      image: 'https://upload.wikimedia.org/wikipedia/commons/7/7a/Light_blue_square.svg' },
+    { name: 'Rock',        class: 'rock',        image: 'https://upload.wikimedia.org/wikipedia/commons/5/58/Brown_square.svg' },
+    { name: 'Celestial',   class: 'celestial',   image: 'https://upload.wikimedia.org/wikipedia/commons/a/a7/Star_symbol_gold.svg' },
+    { name: 'Divine',      class: 'divine',      image: 'https://upload.wikimedia.org/wikipedia/commons/2/2c/Star_gold.svg' },
+    { name: 'Cosmic',      class: 'cosmic',      image: 'https://upload.wikimedia.org/wikipedia/commons/2/23/Black_circle.svg' },
+    { name: 'Eternal',     class: 'eternal',     image: 'https://upload.wikimedia.org/wikipedia/commons/8/87/White_square.svg' },
+    { name: 'Omniversal',  class: 'omniversal',  image: 'https://upload.wikimedia.org/wikipedia/commons/3/38/Blue_star.svg' },
+    { name: 'Astral',      class: 'astral',      image: 'https://upload.wikimedia.org/wikipedia/commons/0/0e/Star_purple.svg' },
+    { name: 'Phantasm',    class: 'phantasm',    image: 'https://upload.wikimedia.org/wikipedia/commons/5/50/Pink_star.svg' },
+    { name: 'Void',        class: 'void',        image: 'https://upload.wikimedia.org/wikipedia/commons/9/98/Black_square.svg' },
+    { name: 'Prismatic',   class: 'prismatic',   image: 'https://upload.wikimedia.org/wikipedia/commons/3/3c/Rainbow_star.svg' },
+    { name: 'Infinite',    class: 'infinite',    image: 'https://upload.wikimedia.org/wikipedia/commons/9/90/Infinity_symbol.svg' },
+    { name: 'Transcendent',class: 'transcendent',image: 'https://upload.wikimedia.org/wikipedia/commons/b/b6/Gold_star.svg' },
+    { name: 'Origin',      class: 'origin',      image: 'https://upload.wikimedia.org/wikipedia/commons/4/4f/Green_star.svg' },
+    { name: 'Apex',        class: 'apex',        image: 'https://upload.wikimedia.org/wikipedia/commons/6/6c/Red_star.svg' },
+    { name: 'Apotheosis',  class: 'apotheosis',  image: 'https://upload.wikimedia.org/wikipedia/commons/e/e0/Yellow_star.svg' },
+    { name: 'Meta',        class: 'meta',        image: 'https://upload.wikimedia.org/wikipedia/commons/7/7d/Grey_star.svg' },
+    { name: 'Absolute',    class: 'absolute',    image: 'https://upload.wikimedia.org/wikipedia/commons/f/fb/Cyan_star.svg' }
+];
+
+const baseRarityWeights = [
+    50, 25, 15, 8, 5, 3, 2, 1, 0.8, 0.6, 0.4, 0.3, 0.2, 0.15, 0.09, 0.06, 0.04, 0.02, 0.01, 0.005, 0.002, 0.001, 0.0005
+];
+
+let luckBoostWeights = [
+    50, 32, 20, 14, 10, 6, 4, 2.5, 1.6, 1.1, 0.75, 0.6, 0.45, 0.32, 0.21, 0.14, 0.09, 0.05, 0.02, 0.009, 0.004, 0.002, 0.001
+];
+
+let superLuckWeights = [
+    50, 38, 28, 20, 16, 12, 8, 5, 3.5, 2.4, 1.8, 1.2, 0.8, 0.6, 0.4, 0.25, 0.16, 0.09, 0.06, 0.03, 0.012, 0.006, 0.003
+];
+
+// Storage key
+const STORAGE_KEY = "case_simulator_save_v3";
+
+// State
+let stats = { timePlayed: 0, spins: 0, rarest: { name: rarities[0].name, count: 0 } };
+let inventory = {};
+let upgrades = {};
+let unlockedCosmetics = [];
+let selectedCosmetic = null;
+
+let autoRolling = false;
+let luckBoostTime = 0;
+let superLuckTime = 0;
+let eternalFortuneTime = 0;
+let luckBoostActive = false;
+let superLuckActive = false;
+let eternalFortuneActive = false;
+
+let luckInterval = null;
+let superLuckInterval = null;
+let eternalInterval = null;
+
+let suppressCutscenesDuringSimulation = false;
+let cutsceneActive = false;
+let previousAutoRolling = false;
+const cutsceneDuration = 6000; // ms
+
+let apexReactorActive = false;
+
+// tab activity
+let isTabActive = true;
+document.addEventListener("visibilitychange", () => { isTabActive = !document.hidden; });
+
+/* ---------------------------
+   Defaults & Persistence
+   --------------------------- */
+function defaultInventory() {
+    const inv = {};
+    rarities.forEach(r => inv[r.name] = 0);
+    return inv;
+}
+function defaultUpgrades() {
+    return {
+        fasterRoll: false,
+        evenFasterRoll: false,
+        autoRoll: false,
+        instantRoll: false,
+        superLuck: false
+    };
+}
+function saveAllData() {
+    try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({
+            inventory, upgrades, stats, luckBoostTime, superLuckTime, eternalFortuneTime, unlockedCosmetics, selectedCosmetic
+        }));
+    } catch (e) {
+        console.error("Save failed:", e);
+    }
+}
+function loadAllData() {
+    const dataRaw = localStorage.getItem(STORAGE_KEY);
+    if (!dataRaw) {
+        inventory = defaultInventory();
+        upgrades = defaultUpgrades();
+        stats = { timePlayed: 0, spins: 0, rarest: { name: rarities[0].name, count: 0 } };
+        luckBoostTime = 0; superLuckTime = 0; eternalFortuneTime = 0;
+        unlockedCosmetics = []; selectedCosmetic = null;
+        return;
+    }
+    try {
+        const d = JSON.parse(dataRaw);
+        inventory = d.inventory || defaultInventory();
+        upgrades = d.upgrades || defaultUpgrades();
+        stats = d.stats || { timePlayed: 0, spins: 0, rarest: { name: rarities[0].name, count: 0 } };
+        luckBoostTime = d.luckBoostTime || 0;
+        superLuckTime = d.superLuckTime || 0;
+        eternalFortuneTime = d.eternalFortuneTime || 0;
+        unlockedCosmetics = d.unlockedCosmetics || [];
+        selectedCosmetic = d.selectedCosmetic || null;
+    } catch (e) {
+        console.error("Load failed:", e);
+        inventory = defaultInventory();
+        upgrades = defaultUpgrades();
+        stats = { timePlayed: 0, spins: 0, rarest: { name: rarities[0].name, count: 0 } };
+        luckBoostTime = 0; superLuckTime = 0; eternalFortuneTime = 0;
+        unlockedCosmetics = []; selectedCosmetic = null;
+    }
+}
+
+/* ---------------------------
+   UI rendering
+   --------------------------- */
+const spinner = document.getElementById('spinner');
+const visibleSlots = 13;
+const pointerIdx = Math.floor(visibleSlots / 2);
+
+function renderSpinnerWindow(windowRarities) {
+    spinner.innerHTML = '';
+    for (let r of windowRarities) {
+        const div = document.createElement('div');
+        div.className = 'rarity ' + r.class;
+        div.innerHTML = `<img src="${r.image}" alt="${r.name}"><span>${r.name}</span>`;
+        spinner.appendChild(div);
+    }
+}
+function renderInventory() {
+    const invDiv = document.getElementById('inventory');
+    invDiv.innerHTML = '';
+    for (let r of rarities) {
+        const span = document.createElement('span');
+        span.className = 'inv-item ' + r.class;
+        span.id = 'inv-'+r.name;
+        span.innerHTML = `<img src="${r.image}" alt="${r.name}" style="width:22px;vertical-align:middle;margin-right:6px;"> <span class="count">${inventory[r.name]||0}</span>`;
+        invDiv.appendChild(span);
+    }
+}
+function updateInventoryCount(rarityName) {
+    const span = document.getElementById('inv-' + rarityName);
+    if (span) span.querySelector('.count').textContent = inventory[rarityName] || 0;
+}
+
+function getRarestStat() {
+    let idx = rarities.length - 1;
+    while (idx >= 0) {
+        if ((inventory[rarities[idx].name]||0) > 0) break;
+        idx--;
+    }
+    return {
+        name: rarities[idx >= 0 ? idx : 0].name,
+        class: rarities[idx >= 0 ? idx : 0].class,
+        count: (inventory[rarities[idx >= 0 ? idx : 0].name]||0)
+    };
+}
+
+function formatTime(secs) {
+    let m = Math.floor(secs / 60), s = secs % 60;
+    return `${m}:${s.toString().padStart(2,'0')}`;
+}
+
+function renderStats() {
+    const rarest = getRarestStat();
+    document.getElementById("stats-content").innerHTML =
+        `Time Played: <span>${formatTime(stats.timePlayed)}</span><br>` +
+        `Total Spins: <span>${stats.spins}</span><br>` +
+        `Rarest Item: <span class="inv-item ${rarest.class}">${rarest.name}</span> (${rarest.count} obtained)`;
+}
+
+/* ---------------------------
+   Rarity picking & spin animation
+   --------------------------- */
+function pickRarity() {
+    let weights = baseRarityWeights;
+    if (superLuckActive && superLuckTime > 0) weights = superLuckWeights;
+    else if (luckBoostActive && luckBoostTime > 0) weights = luckBoostWeights;
+    const total = weights.reduce((a,b) => a + b, 0);
+    const rand = Math.random() * total;
+    let accum = 0;
+    for (let i = 0; i < weights.length; i++) {
+        accum += weights[i];
+        if (rand < accum) return i;
+    }
+    return weights.length - 1;
+}
+
+// updated spinner code with instant shortcut and rAF-based timing
+
+// Updated spinToRarity: guarantee the animation takes exactly `duration` ms
+// but only renders a small number of frames that the browser can actually show.
+// This samples the original animationRarities sequence into `desiredFrames` evenly-
+// spaced frames, so a 100ms duration will still show a few frames (<= 60Hz limit).
+
+function getCurrentRollSpeed() {
+    if (upgrades.instantRoll) return 100;
+    if (upgrades.evenFasterRoll) return 700;
+    if (upgrades.fasterRoll) return 1250;
+    return 3000;
+}
+
+function spinToRarity(targetIdx, callback) {
+    // build the full animation sequence (same as original)
+    let animationRarities = [];
+    const factor = (getCurrentRollSpeed() < 3000 ? 3 : 7);
+    for (let i = 0; i < factor * rarities.length; i++) {
+        let rand = Math.random();
+        if (rand < 0.7) animationRarities.push(rarities[0]);
+        else if (rand < 0.92) animationRarities.push(rarities[1]);
+        else if (rand < 0.97) animationRarities.push(rarities[2]);
+        else if (rand < 0.99) animationRarities.push(rarities[3]);
+        else {
+            const rarePool = rarities.slice(4);
+            animationRarities.push(rarePool[Math.floor(Math.random() * rarePool.length)]);
+        }
+    }
+    for (let i = 0; i < visibleSlots; i++) {
+        let idx;
+        if (i === pointerIdx) idx = targetIdx;
+        else idx = (targetIdx + i - pointerIdx + rarities.length) % rarities.length;
+        animationRarities.push(rarities[idx]);
+    }
+
+    const rawTotalFrames = Math.max(1, animationRarities.length - visibleSlots + 1);
+    const duration = Math.max(1, getCurrentRollSpeed()); // ms
+
+    // Calculate how many frames the browser can realistically render during `duration`
+    const targetFPS = 60; // you can lower this (e.g. 30) to reduce frames even more
+    const minFrameTime = 1000 / targetFPS; // ~16.67ms for 60Hz
+    const maxRenderableFrames = Math.max(1, Math.floor(duration / minFrameTime));
+
+    // We want to show at most maxRenderableFrames, but also at most rawTotalFrames
+    const desiredFrames = Math.min(rawTotalFrames, maxRenderableFrames);
+
+    // Precompute the indices in animationRarities we'll actually render, evenly spaced
+    const frameIndices = [];
+    for (let k = 0; k < desiredFrames; k++) {
+        // Spread indices from 0 to rawTotalFrames - 1 inclusive
+        const idx = Math.round(k * (rawTotalFrames - 1) / Math.max(1, desiredFrames - 1));
+        frameIndices.push(idx);
+    }
+
+    // requestAnimationFrame-driven animation: map elapsed time -> which sample frame to render
+    let lastRendered = -1;
+    function step(timestamp, start) {
+        if (!start) start = timestamp;
+        const elapsed = timestamp - start;
+        const progress = Math.min(1, elapsed / duration); // 0..1
+        const frameIdx = Math.floor(progress * (desiredFrames - 1) + 0.00001); // 0..desiredFrames-1
+
+        if (frameIdx !== lastRendered) {
+            lastRendered = frameIdx;
+            const sourceIndex = frameIndices[frameIdx];
+            renderSpinnerWindow(animationRarities.slice(sourceIndex, sourceIndex + visibleSlots));
+        }
+
+        if (elapsed < duration) {
+            requestAnimationFrame((t) => step(t, start));
+        } else {
+            // Ensure final frame is rendered and then call callback with the picked rarity
+            const finalSourceIndex = frameIndices[frameIndices.length - 1];
+            renderSpinnerWindow(animationRarities.slice(finalSourceIndex, finalSourceIndex + visibleSlots));
+            // the item under pointer is at final raw index: rawTotalFrames - 1 + pointerIdx
+            setTimeout(() => callback(animationRarities[rawTotalFrames - 1 + pointerIdx]), 300);
+        }
+    }
+
+    requestAnimationFrame((t) => step(t, null));
+}
+
+/* ---------------------------
+   Crafting UI & handlers
+   --------------------------- */
+function renderRollCraftingList() {
+    let list = '';
+    list += `<div>
+        <span style="font-size:1.05em;">Faster Roll Speed:</span>
+        <span> Cost: <span class="common inv-item">3 <img src="${rarities[0].image}" style="width:18px;vertical-align:middle;"> </span> + <span class="epic inv-item">2 <img src="${rarities[2].image}" style="width:18px;vertical-align:middle;"> </span></span>
+        <button class="craft-btn" id="craft-fasterRoll">Craft</button>
+        ${upgrades.fasterRoll ? '<span class="crafted-upgrade">[Crafted]</span>' : ''}
+    </div>`;
+    list += `<div>
+        <span style="font-size:1.05em;">Even Faster Roll Speed:</span>
+        <span> Cost: <span class="legendary inv-item">3 <img src="${rarities[3].image}" style="width:18px;vertical-align:middle;"> </span> + <span class="mythical inv-item">1 <img src="${rarities[4].image}" style="width:18px;vertical-align:middle;"> </span></span>
+        <button class="craft-btn" id="craft-evenFasterRoll">Craft</button>
+        ${upgrades.evenFasterRoll ? '<span class="crafted-upgrade">[Crafted]</span>' : ''}
+    </div>`;
+    list += `<div>
+        <span style="font-size:1.05em;">Auto Roll:</span>
+        <span> Cost: <span class="unreal inv-item">2 <img src="${rarities[5].image}" style="width:18px;vertical-align:middle;"> </span> + <span class="rock inv-item">1 <img src="${rarities[6].image}" style="width:18px;vertical-align:middle;"> </span></span>
+        <button class="craft-btn" id="craft-autoRoll">Craft</button>
+        ${upgrades.autoRoll ? '<span class="crafted-upgrade">[Crafted]</span>' : ''}
+    </div>`;
+    list += `<div>
+        <span style="font-size:1.05em;">Instant Roll:</span>
+        <span> Cost: <span class="rock inv-item">10 <img src="${rarities[6].image}" style="width:18px;vertical-align:middle;"></span> 
++
+<span class="epic inv-item">40 <img src="${rarities[3].image}" style="width:18px;vertical-align:middle;"></span>
++
+<span class="legendary inv-item">20 <img src="${rarities[4].image}" style="width:18px;vertical-align:middle;"></span>
+
+</span>
+        <button class="craft-btn" id="craft-instantRoll">Craft</button>
+        ${upgrades.instantRoll ? '<span class="crafted-upgrade">[Crafted]</span>' : ''}
+    </div>`;
+    document.getElementById('roll-crafting').innerHTML = list;
+    addRollCraftingHandlers();
+}
+
+function renderLuckCraftingList() {
+    let list = '';
+    list += `<div>
+        <span style="font-size:1.05em;">Luck Potion (2 min, normal):</span>
+        <span> Cost: <span class="mythical inv-item">1 <img src="${rarities[4].image}" style="width:18px;vertical-align:middle;"></span> + <span class="unreal inv-item">1 <img src="${rarities[5].image}" style="width:18px;vertical-align:middle;"></span></span>
+        <button class="craft-btn" id="craft-luckBoost">Craft</button>
+        <span class="crafted-upgrade">(Can be purchased repeatedly)</span>
+    </div>`;
+    list += `<div>
+        <span style="font-size:1.05em;">Super Luck Potion (5 min, much stronger):</span>
+        <span> Cost: <span class="celestial inv-item">2 <img src="${rarities[7].image}" style="width:18px;vertical-align:middle;"></span> + <span class="divine inv-item">2 <img src="${rarities[8].image}" style="width:18px;vertical-align:middle;"></span> + <span class="cosmic inv-item">2 <img src="${rarities[9].image}" style="width:18px;vertical-align:middle;"></span> + <span class="eternal inv-item">1 <img src="${rarities[10].image}" style="width:18px;vertical-align:middle;"></span></span>
+        <button class="craft-btn" id="craft-superLuck">Craft</button>
+        <span class="crafted-upgrade">(Can be purchased repeatedly)</span>
+    </div>`;
+
+    // Eternal Fortune
+    list += `<div>
+        <span style="font-size:1.05em;">Eternal Fortune (2 min, double inventory gains):</span>
+        <span> Cost: <span class="eternal inv-item">2 <img src="${rarities[10].image}" style="width:18px;vertical-align:middle;"></span> + <span class="infinite inv-item">2 <img src="${rarities[16].image}" style="width:18px;vertical-align:middle;"></span> + <span class="celestial inv-item">1 <img src="${rarities[7].image}" style="width:18px;vertical-align:middle;"></span></span>
+        <button class="craft-btn" id="craft-eternalFortune">Craft</button>
+        <span class="crafted-upgrade">(Can be purchased repeatedly)</span>
+    </div>`;
+
+    // Apex Reactor
+    list += `<div>
+        <span style="font-size:1.05em;">Astral Reactor (Next roll lands Astral+):</span>
+        <span> Cost: <span class="astral inv-item">3 <img src="${rarities[12].image}" style="width:18px;vertical-align:middle;"></span> + <span class="void inv-item">1 <img src="${rarities[14].image}" style="width:18px;vertical-align:middle;"></span> + <span class="common inv-item">150 <img src="${rarities[1].image}" style="width:18px;vertical-align:middle;"></span> +  <span class="rare inv-item">50 <img src="${rarities[2].image}" style="width:18px;vertical-align:middle;"></span> +  <span class="legendary inv-item">20 <img src="${rarities[4].image}" style="width:18px;vertical-align:middle;"></span> + <span class="mythical inv-item">10 <img src="${rarities[5].image}" style="width:18px;vertical-align:middle;"></span></span></span></span>
+        <button class="craft-btn" id="craft-apexReactor">Craft</button>
+        <span class="crafted-upgrade">(Can be purchased repeatedly)</span>
+    </div>`;
+
+    // Infinite Roll
+    list += `<div>
+        <span style="font-size:1.05em;">Infinite Roll (simulate 2000 spins):</span>
+        <span> Cost: <span class="infinite inv-item">2 <img src="${rarities[16].image}" style="width:18px;vertical-align:middle;"></span> + <span class="meta inv-item">1 <img src="${rarities[21].image}" style="width:18px;vertical-align:middle;"></span> + <span class="apex inv-item">1 <img src="${rarities[19].image}" style="width:18px;vertical-align:middle;"></span> + <span class="legendary inv-item">5 <img src="${rarities[3].image}" style="width:18px;vertical-align:middle;"></span></span>
+        <button class="craft-btn" id="craft-infiniteRoll">Craft</button>
+        <span class="crafted-upgrade">(Can be purchased repeatedly)</span>
+    </div>`;
+
+    document.getElementById('luck-crafting').innerHTML = list;
+    addLuckCraftingHandlers();
+}
+
+function renderCosmeticCraftingList() {
+    let list = '';
+    list += `<div>
+        <span style="font-size:1.05em;">Rainbow Spinner Skin:</span>
+        <span> Cost: <span class="mythical inv-item">1 <img src="${rarities[4].image}" style="width:18px;vertical-align:middle;"></span> + <span class="celestial inv-item">2 <img src="${rarities[7].image}" style="width:18px;vertical-align:middle;"></span></span>
+        <button class="craft-btn" id="craft-rainbowSkin">Craft</button>
+        <span class="crafted-upgrade">(Cosmetic)</span>
+    </div>`;
+    list += `<div>
+        <span style="font-size:1.05em;">Gold Pointer:</span>
+        <span> Cost: <span class="divine inv-item">3 <img src="${rarities[8].image}" style="width:18px;vertical-align:middle;"></span></span>
+        <button class="craft-btn" id="craft-goldPointer">Craft</button>
+        <span class="crafted-upgrade">(Cosmetic)</span>
+    </div>`;
+    list += `<div style="margin-top:10px;">
+        <span style="font-size:1.05em;">Unlocked Cosmetics:</span>
+        <div id="unlocked-cosmetics" style="margin-top:8px;"></div>
+    </div>`;
+    document.getElementById('cosmetic-crafting').innerHTML = list;
+    addCosmeticCraftingHandlers();
+    renderUnlockedCosmetics();
+}
+
+function renderUnlockedCosmetics() {
+    const wrap = document.getElementById('unlocked-cosmetics');
+    if (!wrap) return;
+    wrap.innerHTML = '';
+    if (unlockedCosmetics.length === 0) wrap.textContent = 'None unlocked';
+    unlockedCosmetics.forEach((c) => {
+        const btn = document.createElement('button');
+        btn.className = 'small-btn';
+        btn.textContent = c + (selectedCosmetic === c ? ' ✓' : '');
+        btn.onclick = () => {
+            selectedCosmetic = c;
+            document.getElementById('craft-result').textContent = `Selected cosmetic: ${c}`;
+            saveAllData();
+            renderUnlockedCosmetics();
+        };
+        wrap.appendChild(btn);
+    });
+}
+
+/* Crafting handlers */
+function addRollCraftingHandlers() {
+    const craftFaster = document.getElementById('craft-fasterRoll');
+    if (craftFaster) craftFaster.onclick = function() {
+        if (upgrades.fasterRoll) return;
+        if (inventory.Common >= 3 && inventory.Epic >= 2) {
+            inventory.Common -= 3; inventory.Epic -= 2;
+            upgrades.fasterRoll = true;
+            updateInventoryCount('Common'); updateInventoryCount('Epic');
+            document.getElementById('craft-result').textContent = "Upgrade crafted! Roll speed is now faster.";
+            renderRollCraftingList(); updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftEven = document.getElementById('craft-evenFasterRoll');
+    if (craftEven) craftEven.onclick = function() {
+        if (upgrades.evenFasterRoll) return;
+        if (inventory.Legendary >= 3 && inventory.Mythical >= 1) {
+            inventory.Legendary -= 3; inventory.Mythical -= 1;
+            upgrades.evenFasterRoll = true;
+            updateInventoryCount('Legendary'); updateInventoryCount('Mythical');
+            document.getElementById('craft-result').textContent = "Upgrade crafted! Roll speed is now even faster.";
+            renderRollCraftingList(); updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftAuto = document.getElementById('craft-autoRoll');
+    if (craftAuto) craftAuto.onclick = function() {
+        if (upgrades.autoRoll) return;
+        if (inventory.Unreal >= 2 && inventory.Rock >= 1) {
+            inventory.Unreal -= 2; inventory.Rock -= 1;
+            upgrades.autoRoll = true;
+            updateInventoryCount('Unreal'); updateInventoryCount('Rock');
+            document.getElementById('craft-result').textContent = "Upgrade crafted! Auto roll unlocked.";
+            renderRollCraftingList(); updateAutoRollVisibility(); updateAutoRollButton(); updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftInst = document.getElementById('craft-instantRoll');
+    if (craftInst) craftInst.onclick = function() {
+        if (upgrades.instantRoll) return;
+        if (inventory.Rock >= 10 && inventory.Epic >= 40 && inventory.Legendary >=20) {
+            inventory.Rock -= 10; inventory.Epic -= 40; inventory.Legendary -= 20;
+            upgrades.instantRoll = true;
+            updateInventoryCount('Rock'); updateInventoryCount('Legendary'); updateInventoryCount('Epic');
+            document.getElementById('craft-result').textContent = "Upgrade crafted! Rolls are now instant.";
+            renderRollCraftingList(); updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+}
+
+function addLuckCraftingHandlers() {
+    const craftLuck = document.getElementById('craft-luckBoost');
+    if (craftLuck) craftLuck.onclick = function() {
+        if (inventory.Mythical >= 1 && inventory.Unreal >= 1) {
+            inventory.Mythical -= 1; inventory.Unreal -= 1;
+            updateInventoryCount('Mythical'); updateInventoryCount('Unreal');
+            luckBoostTime += 120; startLuckBoost();
+            document.getElementById('craft-result').textContent = "Luck potion activated! Increased odds for rare drops.";
+            updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftSuper = document.getElementById('craft-superLuck');
+    if (craftSuper) craftSuper.onclick = function() {
+        if (inventory.Celestial >= 2 && inventory.Divine >= 2 && inventory.Cosmic >= 2 && inventory.Eternal >= 1) {
+            inventory.Celestial -= 2; inventory.Divine -= 2; inventory.Cosmic -= 2; inventory.Eternal -= 1;
+            updateInventoryCount('Celestial'); updateInventoryCount('Divine'); updateInventoryCount('Cosmic'); updateInventoryCount('Eternal');
+            superLuckTime += 300; startSuperLuck();
+            document.getElementById('craft-result').textContent = "Super Luck potion activated! MUCH higher odds for rare drops!";
+            updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftEternal = document.getElementById('craft-eternalFortune');
+    if (craftEternal) craftEternal.onclick = function() {
+        if (inventory.Eternal >= 2 && inventory.Infinite >= 2 && inventory.Celestial >= 1) {
+            inventory.Eternal -= 2; inventory.Infinite -= 2; inventory.Celestial -= 1;
+            updateInventoryCount('Eternal'); updateInventoryCount('Infinite'); updateInventoryCount('Celestial');
+            eternalFortuneTime += 420; startEternalFortune();
+            document.getElementById('craft-result').textContent = "Eternal Fortune activated! All gains doubled for 2 minutes.";
+            updateCraftingButtonStates(); saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftApex = document.getElementById('craft-apexReactor');
+    if (craftApex) craftApex.onclick = function() {
+        if (inventory.Astral >= 3 && inventory.Void >= 1 && inventory.Rare >= 50 && inventory.Common >= 150 && inventory.Legendary >= 20 && inventory.Mythical >= 10) {
+            inventory.Astral -= 3; inventory.Void -= 1; inventory.Common -= 150; inventory.Rare -= 50; inventory.Legendary -= 20; inventory.Mythical -= 10;
+            updateInventoryCount('Apex'); updateInventoryCount('Astral'); updateInventoryCount('Void'); updateInventoryCount('Common'); updateInventoryCount('Rare'); updateInventoryCount('Legendary'); updateInventoryCount('Mythical');
+            apexReactorActive = true;
+            document.getElementById('craft-result').textContent = "Apex Reactor activated! Your next roll will be Astral+.";
+            saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftInfinite = document.getElementById('craft-infiniteRoll');
+    if (craftInfinite) craftInfinite.onclick = function() {
+        if (inventory.Infinite >= 2 && inventory.Meta >= 1 && inventory.Apex >= 1 && inventory.Legendary >= 5) {
+            inventory.Infinite -= 2; inventory.Meta -= 1; inventory.Apex -= 1; inventory.Legendary -= 5;
+            updateInventoryCount('Infinite'); updateInventoryCount('Meta'); updateInventoryCount('Apex'); updateInventoryCount('Legendary');
+            simulateInfiniteRolls(2000);
+            document.getElementById('craft-result').textContent = "Infinite Roll executed! 2000 spins simulated instantly.";
+            saveAllData();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+}
+
+function addCosmeticCraftingHandlers() {
+    const craftRainbow = document.getElementById('craft-rainbowSkin');
+    if (craftRainbow) craftRainbow.onclick = function() {
+        if (inventory.Mythical >= 1 && inventory.Celestial >= 2) {
+            inventory.Mythical -= 1; inventory.Celestial -= 2;
+            updateInventoryCount('Mythical'); updateInventoryCount('Celestial');
+            if (!unlockedCosmetics.includes("Rainbow Spinner Skin")) unlockedCosmetics.push("Rainbow Spinner Skin");
+            document.getElementById('craft-result').textContent = "Unlocked Rainbow Spinner Skin!";
+            saveAllData(); renderUnlockedCosmetics();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+
+    const craftGold = document.getElementById('craft-goldPointer');
+    if (craftGold) craftGold.onclick = function() {
+        if (inventory.Divine >= 3) {
+            inventory.Divine -= 3;
+            updateInventoryCount('Divine');
+            if (!unlockedCosmetics.includes("Gold Pointer")) unlockedCosmetics.push("Gold Pointer");
+            document.getElementById('craft-result').textContent = "Unlocked Gold Pointer!";
+            saveAllData(); renderUnlockedCosmetics();
+        } else document.getElementById('craft-result').textContent = "Not enough materials!";
+    };
+}
+
+/* ---------------------------
+   Luck / Eternal timers
+   --------------------------- */
+function updateLuckTimer() {
+    const timerDiv = document.getElementById('luck-timer');
+    let out = "";
+    if (superLuckTime > 0) out += `Super Luck active! Time left: ${formatTime(superLuckTime)}<br>`;
+    else if (eternalFortuneTime > 0) out += `Eternal Fortune active! Time left: ${formatTime(eternalFortuneTime)}<br>`;
+    else if (luckBoostTime > 0) out += `Luck boost active! Time left: ${formatTime(luckBoostTime)}<br>`;
+    timerDiv.innerHTML = out;
+}
+
+function startLuckBoost() {
+    luckBoostActive = true;
+    updateLuckTimer();
+    if (luckInterval) return;
+    luckInterval = setInterval(() => {
+        if (luckBoostTime > 0) { luckBoostTime--; updateLuckTimer(); saveAllData(); }
+        if (luckBoostTime <= 0) { luckBoostActive = false; clearInterval(luckInterval); luckInterval = null; updateLuckTimer(); saveAllData(); }
+    }, 1000);
+}
+
+function startSuperLuck() {
+    superLuckActive = true;
+    updateLuckTimer();
+    if (superLuckInterval) return;
+    superLuckInterval = setInterval(() => {
+        if (superLuckTime > 0) { superLuckTime--; updateLuckTimer(); saveAllData(); }
+        if (superLuckTime <= 0) { superLuckActive = false; clearInterval(superLuckInterval); superLuckInterval = null; updateLuckTimer(); saveAllData(); }
+    }, 1000);
+}
+
+function startEternalFortune() {
+    eternalFortuneActive = true;
+    updateLuckTimer();
+    if (eternalInterval) return;
+    eternalInterval = setInterval(() => {
+        if (eternalFortuneTime > 0) { eternalFortuneTime--; updateLuckTimer(); saveAllData(); }
+        if (eternalFortuneTime <= 0) { eternalFortuneActive = false; clearInterval(eternalInterval); eternalInterval = null; updateLuckTimer(); saveAllData(); }
+    }, 1000);
+}
+
+/* ---------------------------
+   Cutscene system
+   --------------------------- */
+const cutsceneData = {
+    "Absolute": { title: "Absolute Ascendancy!", desc: "An absolute rarity — power unmatched.", bg: "linear-gradient(135deg,#001f3f,#003366)" },
+    "Meta": { title: "Meta Revelation!", desc: "A glimpse beyond the game's boundaries.", bg: "linear-gradient(135deg,#222,#444)" },
+    "Apotheosis": { title: "Apotheosis Unleashed!", desc: "You have reached the pinnacle.", bg: "linear-gradient(135deg,#3a0b0b,#6b0000)" },
+    "Apex": { title: "Apex Reactor Triggered!", desc: "A top-tier drop has arrived.", bg: "linear-gradient(135deg,#5a0000,#a10000)" },
+    "Infinite": { title: "Infinite Surge!", desc: "A tidal wave of infinite luck!", bg: "linear-gradient(135deg,#0f0f3a,#2b2b8a)" },
+    "Transcendent": { title: "Transcendent Breakthrough!", desc: "Reality folds in your favor.", bg: "linear-gradient(135deg,#f6d365,#fda085)" },
+    "Astral": { title: "Astral Arrival!", desc: "The stars aligned for you.", bg: "linear-gradient(135deg,#8e2de2,#4a00e0)" },
+    // Add custom entries as you'd like
+};
+
+function isAmongTopNRarest(idx, n = 5) {
+    return idx >= rarities.length - n;
+}
+
+function showCutscene(rarityObj) {
+    if (suppressCutscenesDuringSimulation) return;
+    cutsceneActive = true;
+    previousAutoRolling = autoRolling;
+    autoRolling = false;
+    updateAutoRollButton();
+    document.getElementById('roll-btn').disabled = true;
+
+    const overlay = document.getElementById('cutscene-overlay');
+    const card = document.getElementById('cutscene-card');
+    const data = cutsceneData[rarityObj.name] || {};
+
+    document.getElementById('cutscene-item-img').src = rarityObj.image || '';
+    document.getElementById('cutscene-item-img').alt = rarityObj.name || 'Rare Item';
+    document.getElementById('cutscene-title').textContent = data.title || `You obtained ${rarityObj.name}!`;
+    document.getElementById('cutscene-desc').textContent = data.desc || "One of the rarest items - congratulations!";
+    card.style.background = data.bg || "linear-gradient(135deg,#111,#2a2a2a)";
+
+    overlay.style.display = 'flex';
+    overlay.setAttribute('aria-hidden','false');
+
+    const skipBtn = document.getElementById('cutscene-skip');
+    let timer = setTimeout(hideCutscene, cutsceneDuration);
+
+    function clickSkip() { clearTimeout(timer); hideCutscene(); }
+    skipBtn.onclick = clickSkip;
+
+    function hideCutscene() {
+        if (!cutsceneActive) return;
+        overlay.style.display = 'none';
+        overlay.setAttribute('aria-hidden','true');
+        cutsceneActive = false;
+        document.getElementById('roll-btn').disabled = false;
+        autoRolling = previousAutoRolling;
+        updateAutoRollButton();
+        if (autoRolling) {
+            setTimeout(() => { if (!document.getElementById('roll-btn').disabled) document.getElementById('roll-btn').onclick(); }, 120);
+        }
+    }
+}
+
+/* ---------------------------
+   Infinite simulation
+   --------------------------- */
+function simulateInfiniteRolls(count) {
+    suppressCutscenesDuringSimulation = true;
+    for (let i = 0; i < count; i++) {
+        let idx;
+        if (apexReactorActive) {
+            idx = 12 + Math.floor(Math.random() * (rarities.length - 12));
+            apexReactorActive = false;
+        } else {
+            idx = pickRarity();
+        }
+        const name = rarities[idx].name;
+        const gain = eternalFortuneActive ? 2 : 1;
+        inventory[name] = (inventory[name] || 0) + gain;
+        stats.spins++;
+    }
+    renderInventory();
+    renderStats();
+    updateCraftingButtonStates();
+    saveAllData();
+    suppressCutscenesDuringSimulation = false;
+}
+
+/* ---------------------------
+   Auto-roll scheduling (background slowdown)
+   --------------------------- */
+function scheduleNextAutoRoll() {
+    if (!autoRolling) return;
+    const delay = isTabActive ? 75 : 750; // 10x slower in background
+    setTimeout(() => {
+        if (!document.getElementById('roll-btn').disabled && !cutsceneActive) {
+            document.getElementById('roll-btn').onclick();
+        }
+    }, delay);
+}
+
+/* ---------------------------
+   Crafting button states
+   --------------------------- */
+function updateCraftingButtonStates() {
+    const upgradesArr = [
+        {id:'craft-fasterRoll', cost:{Common:3, Epic:2}, crafted: upgrades.fasterRoll},
+        {id:'craft-evenFasterRoll', cost:{Legendary:3, Mythical:1}, crafted: upgrades.evenFasterRoll},
+        {id:'craft-autoRoll', cost:{Unreal:2, Rock:1}, crafted: upgrades.autoRoll},
+        {id:'craft-instantRoll', cost:{Rock:10}, crafted: upgrades.instantRoll}
+    ];
+    upgradesArr.forEach(upg => {
+        const btn = document.getElementById(upg.id);
+        if (!btn) return;
+        if (upg.crafted) {
+            btn.classList.add("crafted");
+            btn.disabled = true;
+        } else {
+            let canCraft = true;
+            for (let item in upg.cost) {
+                if ((inventory[item]||0) < upg.cost[item]) canCraft = false;
+            }
+            if (canCraft) { btn.classList.remove("crafted"); btn.disabled = false; }
+            else { btn.classList.remove("crafted"); btn.disabled = true; }
+        }
+    });
+    const luckBtn = document.getElementById('craft-luckBoost'); if (luckBtn) luckBtn.disabled = !((inventory.Mythical||0) >= 1 && (inventory.Unreal||0) >= 1);
+    const superBtn = document.getElementById('craft-superLuck'); if (superBtn) superBtn.disabled = !((inventory.Celestial||0) >= 2 && (inventory.Divine||0) >= 2 && (inventory.Cosmic||0) >= 2 && (inventory.Eternal||0) >= 1);
+    const eternalBtn = document.getElementById('craft-eternalFortune'); if (eternalBtn) eternalBtn.disabled = !((inventory.Eternal||0) >= 2 && (inventory.Infinite||0) >= 2 && (inventory.Celestial||0) >= 1);
+    const apexBtn = document.getElementById('craft-apexReactor'); if (apexBtn) apexBtn.disabled = !((inventory.Apex||0) >= 1 && (inventory.Astral||0) >= 1 && (inventory.Void||0) >= 1 && (inventory.Absolute||0) >= 1);
+    const infBtn = document.getElementById('craft-infiniteRoll'); if (infBtn) infBtn.disabled = !((inventory.Infinite||0) >= 2 && (inventory.Meta||0) >= 1 && (inventory.Apex||0) >= 1 && (inventory.Legendary||0) >= 5);
+    const craftRainbow = document.getElementById('craft-rainbowSkin'); if (craftRainbow) craftRainbow.disabled = !((inventory.Mythical||0) >= 1 && (inventory.Celestial||0) >= 2);
+    const craftGold = document.getElementById('craft-goldPointer'); if (craftGold) craftGold.disabled = !((inventory.Divine||0) >= 3);
+}
+
+/* ---------------------------
+   Roll button logic
+   --------------------------- */
+const rollBtn = document.getElementById('roll-btn');
+const autoRollBtn = document.getElementById('auto-roll-toggle-btn');
+
+rollBtn.onclick = function() {
+    if (rollBtn.disabled) return;
+    rollBtn.disabled = true;
+    let rarityIdx = pickRarity();
+    spinToRarity(rarityIdx, (landedRarityObj) => {
+        // Apex Reactor override
+        if (apexReactorActive) {
+            const idx = 12 + Math.floor(Math.random() * (rarities.length - 12));
+            landedRarityObj = rarities[idx];
+            apexReactorActive = false;
+        }
+
+        const rarityName = landedRarityObj.name;
+        const gain = eternalFortuneActive ? 2 : 1;
+        inventory[rarityName] = (inventory[rarityName] || 0) + gain;
+        updateInventoryCount(rarityName);
+
+        stats.spins++;
+        stats.rarest = getRarestStat();
+
+        updateCraftingButtonStates();
+        updateAutoRollButton();
+        renderStats();
+        saveAllData();
+
+        const landedIdx = rarities.indexOf(landedRarityObj);
+        if (isAmongTopNRarest(landedIdx, 5) && !suppressCutscenesDuringSimulation) {
+            showCutscene(landedRarityObj);
+        } else {
+            rollBtn.disabled = false;
+            if (autoRolling) scheduleNextAutoRoll();
+        }
+    });
+};
+
+autoRollBtn.onclick = function() {
+    autoRolling = !autoRolling;
+    updateAutoRollButton();
+    if (autoRolling && !rollBtn.disabled) {
+        rollBtn.onclick();
+        rollBtn.disabled = true;
+        autoRollBtn.textContent = "Stop Auto Roll";
+    } else {
+        rollBtn.disabled = false;
+        autoRollBtn.textContent = "Start Auto Roll";
+    }
+};
+
+function updateAutoRollButton() {
+    const autoRollBtnEl = document.getElementById('auto-roll-toggle-btn');
+    if (!upgrades.autoRoll) {
+        autoRollBtnEl.style.display = "none";
+        return;
+    }
+    autoRollBtnEl.style.display = "";
+    autoRollBtnEl.textContent = autoRolling ? "Stop Auto Roll" : "Start Auto Roll";
+}
+function updateAutoRollVisibility() {
+    const autoRollBtnEl = document.getElementById('auto-roll-toggle-btn');
+    autoRollBtnEl.style.display = upgrades.autoRoll ? "" : "none";
+}
+
+/* ---------------------------
+   Subcrafting toggles & other UI wiring
+   --------------------------- */
+const craftingToggle = document.getElementById('crafting-toggle');
+const craftingDiv = document.getElementById('crafting');
+let craftingShown = false;
+craftingToggle.onclick = function() {
+    craftingShown = !craftingShown;
+    craftingDiv.style.display = craftingShown ? "block" : "none";
+    craftingToggle.textContent = (craftingShown ? "▲" : "▼") + " Crafting";
+};
+
+const rollCraftingToggle = document.getElementById('roll-crafting-toggle');
+const rollCraftingDiv = document.getElementById('roll-crafting');
+let rollCraftingShown = false;
+rollCraftingToggle.onclick = function() {
+    rollCraftingShown = !rollCraftingShown;
+    rollCraftingDiv.style.display = rollCraftingShown ? "block" : "none";
+    rollCraftingToggle.textContent = (rollCraftingShown ? "▲" : "▼") + " Roll Upgrades";
+};
+
+const luckCraftingToggle = document.getElementById('luck-crafting-toggle');
+const luckCraftingDiv = document.getElementById('luck-crafting');
+let luckCraftingShown = false;
+luckCraftingToggle.onclick = function() {
+    luckCraftingShown = !luckCraftingShown;
+    luckCraftingDiv.style.display = luckCraftingShown ? "block" : "none";
+    luckCraftingToggle.textContent = (luckCraftingShown ? "▲" : "▼") + " Luck Upgrades";
+};
+
+const cosmeticToggle = document.getElementById('cosmetic-crafting-toggle');
+const cosmeticDiv = document.getElementById('cosmetic-crafting');
+let cosmeticShown = false;
+cosmeticToggle.onclick = function() {
+    cosmeticShown = !cosmeticShown;
+    cosmeticDiv.style.display = cosmeticShown ? "block" : "none";
+    cosmeticToggle.textContent = (cosmeticShown ? "▲" : "▼") + " Cosmetic Crafting";
+};
+
+const statsToggle = document.getElementById('stats-toggle');
+const statsDiv = document.getElementById('stats');
+let statsShown = false;
+statsToggle.onclick = function() {
+    statsShown = !statsShown;
+    statsDiv.style.display = statsShown ? 'block' : 'none';
+    statsToggle.textContent = (statsShown ? "▲" : "▼") + " Stats";
+};
+
+function setupSubcraftingToggles() {
+    document.querySelectorAll(".subcrafting-toggle").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const content = btn.nextElementSibling;
+            content.style.display = (content.style.display === "none" ? "block" : "none");
+            btn.textContent = (content.style.display === "none" ? "▼ " : "▲ ") + btn.textContent.replace(/^▼ |^▲ /, '');
+        });
+    });
+}
+
+/* ---------------------------
+   Save / Load (clipboard Base64 + file export/import)
+   --------------------------- */
+   function copySaveToClipboard() {
+    try {
+        const saveData = {
+            metadata: { version: 1, exportedAt: Date.now() },
+            inventory, upgrades, stats, luckBoostTime, superLuckTime, eternalFortuneTime,
+            unlockedCosmetics, selectedCosmetic
+        };
+        const json = JSON.stringify(saveData);
+        const base64 = btoa(unescape(encodeURIComponent(json)));
+
+        // Try modern clipboard API first
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(base64).then(() => {
+                alert("Save copied to clipboard. Paste it somewhere safe.");
+            }).catch(() => {
+                fallbackCopy(base64);
+            });
+        } else {
+            fallbackCopy(base64);
+        }
+
+        function fallbackCopy(text) {
+            const textarea = document.createElement("textarea");
+            textarea.value = text;
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand("copy");
+                alert("Save copied to clipboard. Paste it somewhere safe.");
+            } catch (err) {
+                prompt("Copy this save string manually (Ctrl/Cmd+C):", text);
+            }
+            document.body.removeChild(textarea);
+        }
+    } catch (e) {
+        console.error("Copy failed", e);
+        alert("Copy failed. See console.");
+    }
+}
+
+
+function loadSaveFromBase64String(base64) {
+    try {
+        const json = decodeURIComponent(escape(atob(base64)));
+        const data = JSON.parse(json);
+        inventory = data.inventory || defaultInventory();
+        upgrades = data.upgrades || defaultUpgrades();
+        stats = data.stats || { timePlayed: 0, spins: 0, rarest: { name: rarities[0].name, count: 0 } };
+        luckBoostTime = data.luckBoostTime || 0;
+        superLuckTime = data.superLuckTime || 0;
+        eternalFortuneTime = data.eternalFortuneTime || 0;
+        unlockedCosmetics = data.unlockedCosmetics || [];
+        selectedCosmetic = data.selectedCosmetic || null;
+        renderInventory(); renderStats(); renderRollCraftingList(); renderLuckCraftingList(); renderCosmeticCraftingList();
+        updateCraftingButtonStates(); updateLuckTimer(); saveAllData();
+        alert("Save loaded successfully!");
+    } catch (e) {
+        console.error("Load failed", e);
+        alert("Invalid save string.");
+    }
+}
+
+document.getElementById('copy-save-btn').addEventListener('click', copySaveToClipboard);
+
+
+document.getElementById('paste-load-btn').addEventListener('click', () => {
+    const txt = document.getElementById('paste-input').value.trim();
+    if (!txt) { alert('Paste a base64 save string into the input to load.'); return; }
+    loadSaveFromBase64String(txt);
+});
+/* ---------------------------
+   Init / intervals / time tracking
+   --------------------------- */
+function scheduleTimePlayedTick() {
+    setInterval(() => {
+        stats.timePlayed++;
+        renderStats();
+        saveAllData();
+    }, 1000);
+}
+
+// Initialize everything
+function initialize() {
+    loadAllData();
+    renderSpinnerWindow(rarities.slice(0, visibleSlots));
+    renderInventory();
+    renderStats();
+    // Pre-render crafting lists so first-click opens immediately
+    renderRollCraftingList();
+    renderLuckCraftingList();
+    renderCosmeticCraftingList();
+    setupSubcraftingToggles();
+    updateAutoRollVisibility();
+    updateAutoRollButton();
+    updateCraftingButtonStates();
+    updateLuckTimer();
+    scheduleTimePlayedTick();
+}
+
+// Background auto-roll tick (will only schedule when autoRolling)
+setInterval(() => {
+    // nothing here; scheduling is driven by scheduleNextAutoRoll after each roll
+}, 1000);
+
+// Apply offline rolls when page loads if substantial time elapsed
+function applyOfflineSimOnLoad() {
+    // e.g., behave as if some rolls happened while away (capped)
+    // We check stats.spins/timePlayed to avoid double-dipping - a simple approach:
+    // If stats.timePlayed is 0 (first run), don't apply; otherwise compute elapsed since last save unreliable.
+    // For safety we won't auto-generate offline rolls here beyond what user expected; this is left simple.
+    // (The earlier design used lastPlayed timestamps — you can add a lastPlayed field to save for precise offline)
+}
+
+// start
+initialize();
+applyOfflineSimOnLoad();
+
+</script>
+</body>
+</html>
